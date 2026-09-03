@@ -1,0 +1,55 @@
+name: Validate Docs Folder
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check /docs folder exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "ERROR: /docs folder does not exist."
+            exit 1
+          fi
+          echo "docs/ folder found."
+
+      - name: Check required planning documents exist
+        run: |
+          required_files=(
+            "docs/erd.png"
+            "docs/api-endpoint-plan.md"
+            "docs/raceday-schema.sql"
+          )
+
+          missing=0
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "ERROR: Missing required file: $file"
+              missing=1
+            else
+              echo "Found: $file"
+            fi
+          done
+
+          if [ "$missing" -eq 1 ]; then
+            echo "One or more required planning documents are missing."
+            exit 1
+          fi
+
+          echo "All required planning documents are present."
+
+      - name: Check SQL script is non-empty
+        run: |
+          if [ ! -s "docs/raceday-schema.sql" ]; then
+            echo "ERROR: raceday-schema.sql exists but is empty."
+            exit 1
+          fi
+          echo "raceday-schema.sql has content."
