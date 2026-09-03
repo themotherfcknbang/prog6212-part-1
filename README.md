@@ -1,7 +1,7 @@
 # prog6212-part-1
 RaceDay — /docs README
 
-This note documents two deliberate differences between the SQL script (`raceday-schema.sql`) and a literal reading of the ERD (`erd.png`). Both are additions made for data integrity, not contradictions of the ERD's structure or cardinality.
+This note documents two deliberate differences between the SQL script (`raceday-schema.sql`) and a literal reading of the ERD (`Prog.pdf`). Both are additions made for data integrity, not contradictions of the ERD's structure or cardinality.
 
 1. ON DELETE NO ACTION on Enrolments.CategoryID (instead of CASCADE)
 
