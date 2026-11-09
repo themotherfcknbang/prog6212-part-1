@@ -1,0 +1,1457 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "RaceDay API",
+    "description": "API for South African road running, walking and cycling events. Organisers manage events, categories and results; participants browse events, enrol and track their results. Log in with POST /api/auth/login first: the session cookie is then sent automatically with every later request.",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/auth/register/organiser": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register an organiser",
+        "description": "Creates a new Organiser account and logs the new user in.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** fullName, email, password (minimum 8 characters), organisationName and an optional phoneNumber.\n\n**Returns:** The new user's id, name, email and role. A session cookie is issued, and the password is stored only as a BCrypt hash.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterOrganiserDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterOrganiserDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterOrganiserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created - account created and session started"
+          },
+          "400": {
+            "description": "Bad Request - a field is missing or invalid"
+          },
+          "409": {
+            "description": "Conflict - that email is already registered"
+          }
+        }
+      }
+    },
+    "/api/auth/register/participant": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a participant",
+        "description": "Creates a new Participant account and logs the new user in.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** fullName, email, password (minimum 8 characters), dateOfBirth (yyyy-MM-dd, not in the future) and optional gender, emergencyContactName and emergencyContactPhone.\n\n**Returns:** The new user's id, name, email and role. A session cookie is issued, and the password is stored only as a BCrypt hash.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterParticipantDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterParticipantDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterParticipantDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created - account created and session started"
+          },
+          "400": {
+            "description": "Bad Request - a field is missing or invalid"
+          },
+          "409": {
+            "description": "Conflict - that email is already registered"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log in",
+        "description": "Checks the email and password and starts a session for the user's role (Organiser or Participant).\n\n**Who can call it:** Anyone (public).\n\n**Expects:** email and password.\n\n**Returns:** The user's id, name, email and role. A session cookie named RaceDay.Session is set and sent automatically on later requests.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - logged in"
+          },
+          "401": {
+            "description": "Unauthorized - invalid email or password"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log out",
+        "description": "Ends the current session.\n\n**Who can call it:** Any logged-in user.\n\n**Expects:** No request body.\n\n**Returns:** A confirmation message.",
+        "responses": {
+          "200": {
+            "description": "OK - logged out"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          }
+        }
+      }
+    },
+    "/api/events/{eventId}/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "List an event's categories",
+        "description": "Lists the categories (for example 10km or 21km) offered at an event.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** The event id in the URL.\n\n**Returns:** An array of categories ordered by distance.",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - categories returned"
+          },
+          "404": {
+            "description": "Not Found - the event does not exist"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Add a category to an event",
+        "description": "Defines a distance or age category for an event.\n\n**Who can call it:** The Organiser who owns the event.\n\n**Expects:** categoryName, distanceKM (0.01 to 999.99), entryFee (0 or more) and an optional maxParticipants.\n\n**Returns:** The created category.",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created - category created"
+          },
+          "400": {
+            "description": "Bad Request - a field is invalid"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the event does not exist"
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Get a category",
+        "description": "Returns one category.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** The category id in the URL.\n\n**Returns:** The category with its distance, entry fee and capacity.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - category returned"
+          },
+          "404": {
+            "description": "Not Found - the category does not exist"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Update a category",
+        "description": "Changes a category's name, distance, fee or capacity.\n\n**Who can call it:** The Organiser who owns the event the category belongs to.\n\n**Expects:** The same fields as creating a category.\n\n**Returns:** The updated category.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - category updated"
+          },
+          "400": {
+            "description": "Bad Request - a field is invalid"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the category does not exist"
+          },
+          "409": {
+            "description": "Conflict - maxParticipants is lower than the number of active enrolments"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Categories"
+        ],
+        "summary": "Delete a category",
+        "description": "Deletes a category. Cancelled enrolments are removed with it.\n\n**Who can call it:** The Organiser who owns the event the category belongs to.\n\n**Expects:** The category id in the URL.\n\n**Returns:** A confirmation message.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - category deleted"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the category does not exist"
+          },
+          "409": {
+            "description": "Conflict - the category still has active enrolments"
+          }
+        }
+      }
+    },
+    "/api/categories/{categoryId}/enrolments": {
+      "post": {
+        "tags": [
+          "Enrolments"
+        ],
+        "summary": "Enrol in a category",
+        "description": "Enters the logged-in participant into a category. The link between participant, event and category is recorded with a bib number.\n\n**Who can call it:** Participant.\n\n**Expects:** No request body: the participant is taken from the session.\n\n**Returns:** The enrolment with event and category details, status Confirmed and a bib number.",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created - enrolment recorded"
+          },
+          "400": {
+            "description": "Bad Request - the event has already taken place"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - only participants can enrol"
+          },
+          "404": {
+            "description": "Not Found - the category does not exist"
+          },
+          "409": {
+            "description": "Conflict - already enrolled, or the category is full"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Enrolments"
+        ],
+        "summary": "View a category's roster",
+        "description": "Lists who is enrolled in a category.\n\n**Who can call it:** The Organiser who owns the event.\n\n**Expects:** The category id in the URL, and an optional includeCancelled query parameter (default false).\n\n**Returns:** An array of participants with their enrolment status and bib number.",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "includeCancelled",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - roster returned"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the category does not exist"
+          }
+        }
+      }
+    },
+    "/api/participants/{id}/enrolments": {
+      "get": {
+        "tags": [
+          "Enrolments"
+        ],
+        "summary": "List my enrolments",
+        "description": "Lists all of the participant's enrolments, newest event first.\n\n**Who can call it:** Participant (own id only).\n\n**Expects:** The participant id in the URL, which must match the logged-in participant.\n\n**Returns:** An array of enrolments with event and category details.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - enrolments returned"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not a participant, or not your own id"
+          }
+        }
+      }
+    },
+    "/api/enrolments/{id}": {
+      "get": {
+        "tags": [
+          "Enrolments"
+        ],
+        "summary": "Get an enrolment",
+        "description": "Returns one enrolment.\n\n**Who can call it:** The participant who owns it, or the organiser of that event.\n\n**Expects:** The enrolment id in the URL.\n\n**Returns:** The enrolment with event and category details.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - enrolment returned"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - the enrolment belongs to someone else"
+          },
+          "404": {
+            "description": "Not Found - the enrolment does not exist"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Enrolments"
+        ],
+        "summary": "Cancel an enrolment",
+        "description": "Cancels the enrolment by setting its status to Cancelled. The record is kept for history and the place is freed.\n\n**Who can call it:** The Participant who owns the enrolment.\n\n**Expects:** The enrolment id in the URL.\n\n**Returns:** A confirmation message.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - enrolment cancelled"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not a participant, or not your enrolment"
+          },
+          "404": {
+            "description": "Not Found - the enrolment does not exist"
+          },
+          "409": {
+            "description": "Conflict - already cancelled, or the event has already taken place"
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "List upcoming events",
+        "description": "Lists events happening from today onward, soonest first.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** Optional query parameters: location and keyword (text match), from and to (yyyy-MM-dd).\n\n**Returns:** An array of event summaries with the organiser's name and the number of categories.",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - events returned (possibly an empty list)"
+          },
+          "400": {
+            "description": "Bad Request - 'to' is earlier than the start date"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Create an event",
+        "description": "Creates an event owned by the logged-in organiser.\n\n**Who can call it:** Organiser.\n\n**Expects:** eventName, eventDate (today or later), location, and optional description, routeDescription and startTime (HH:mm:ss).\n\n**Returns:** The created event.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created - event created"
+          },
+          "400": {
+            "description": "Bad Request - a field is invalid or the date is in the past"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - participants cannot create events"
+          }
+        }
+      }
+    },
+    "/api/events/{id}": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Get event details",
+        "description": "Returns one event with its full details and its categories.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** The event id in the URL.\n\n**Returns:** The event, including its route description and categories.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - event returned"
+          },
+          "404": {
+            "description": "Not Found - the event does not exist"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Update an event",
+        "description": "Changes an event's details.\n\n**Who can call it:** The Organiser who owns the event.\n\n**Expects:** The same fields as creating an event.\n\n**Returns:** The updated event.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - event updated"
+          },
+          "400": {
+            "description": "Bad Request - a field is invalid or the date was moved into the past"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the event does not exist"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Delete an event",
+        "description": "Deletes an event and its categories. Cancelled enrolments are removed with it.\n\n**Who can call it:** The Organiser who owns the event.\n\n**Expects:** The event id in the URL.\n\n**Returns:** A confirmation message.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - event deleted"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the event does not exist"
+          },
+          "409": {
+            "description": "Conflict - the event still has active enrolments"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/banner": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/organisers/{id}/events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "List an organiser's events",
+        "description": "Lists every event created by one organiser, including past ones.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** The organiser id in the URL.\n\n**Returns:** An array of event summaries, newest first.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - events returned"
+          },
+          "404": {
+            "description": "Not Found - the organiser does not exist"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get my profile",
+        "description": "Returns the logged-in user's own profile.\n\n**Who can call it:** Any logged-in user.\n\n**Expects:** No request body.\n\n**Returns:** An organiser profile (organisationName, phoneNumber) or a participant profile (dateOfBirth, gender, emergency contact). The password is never returned.",
+        "responses": {
+          "200": {
+            "description": "OK - profile returned"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update my profile",
+        "description": "Updates the logged-in user's own details. The email address cannot be changed.\n\n**Who can call it:** Any logged-in user.\n\n**Expects:** fullName (required), plus organisationName and phoneNumber for organisers, or dateOfBirth, gender, emergencyContactName and emergencyContactPhone for participants.\n\n**Returns:** The updated profile.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - profile updated"
+          },
+          "400": {
+            "description": "Bad Request - a field is invalid"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          }
+        }
+      }
+    },
+    "/api/profile/picture": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Upload my profile picture",
+        "description": "Uploads the participant's profile picture to Azure Blob Storage and saves its URL on the profile. A previous picture is replaced.\n\n**Who can call it:** Participant.\n\n**Expects:** An image file (JPEG, PNG or WebP, maximum 5 MB) as multipart form data in the field 'file'.\n\n**Returns:** The public URL of the stored profile picture.",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - picture uploaded"
+          },
+          "400": {
+            "description": "Bad Request - missing file, wrong file type or file too large"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - only participants have a profile picture"
+          }
+        }
+      }
+    },
+    "/api/profile/password": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Change my password",
+        "description": "Replaces the logged-in user's password after checking the current one.\n\n**Who can call it:** Any logged-in user.\n\n**Expects:** currentPassword and newPassword (minimum 8 characters).\n\n**Returns:** A confirmation message. The new password is stored as a BCrypt hash.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - password updated"
+          },
+          "400": {
+            "description": "Bad Request - the new password is too short"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in, or the current password is wrong"
+          }
+        }
+      }
+    },
+    "/api/enrolments/{enrolmentId}/results": {
+      "post": {
+        "tags": [
+          "Results"
+        ],
+        "summary": "Record a result",
+        "description": "Records a participant's finish time and position after the event has taken place.\n\n**Who can call it:** The Organiser who owns the event.\n\n**Expects:** status (Finished, DNF, DNS or DSQ). A Finished result needs finishTime (HH:mm:ss) and may have a position; other statuses must leave both empty.\n\n**Returns:** The recorded result with participant, event and category details.",
+        "parameters": [
+          {
+            "name": "enrolmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created - result recorded"
+          },
+          "400": {
+            "description": "Bad Request - invalid values, or the event has not taken place yet"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the enrolment does not exist"
+          },
+          "409": {
+            "description": "Conflict - a result already exists, or the enrolment was cancelled"
+          }
+        }
+      }
+    },
+    "/api/results/{id}": {
+      "put": {
+        "tags": [
+          "Results"
+        ],
+        "summary": "Correct a result",
+        "description": "Changes an existing result, for example to fix a wrong finish time.\n\n**Who can call it:** The Organiser who owns the event.\n\n**Expects:** The same fields as recording a result.\n\n**Returns:** The updated result.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResultRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - result updated"
+          },
+          "400": {
+            "description": "Bad Request - invalid values"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not an organiser, or not the owner of this event"
+          },
+          "404": {
+            "description": "Not Found - the result does not exist"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Results"
+        ],
+        "summary": "Get a result",
+        "description": "Returns one result.\n\n**Who can call it:** The participant it belongs to, or the organiser of that event.\n\n**Expects:** The result id in the URL.\n\n**Returns:** The result with participant, event and category details.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - result returned"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - the result belongs to someone else"
+          },
+          "404": {
+            "description": "Not Found - the result does not exist"
+          }
+        }
+      }
+    },
+    "/api/events/{eventId}/results": {
+      "get": {
+        "tags": [
+          "Results"
+        ],
+        "summary": "View event results",
+        "description": "Shows the results leaderboard for an event, ordered by category distance and then by position.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** The event id in the URL and an optional categoryId query parameter.\n\n**Returns:** An array of results with participant names.",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - results returned (possibly an empty list)"
+          },
+          "404": {
+            "description": "Not Found - the event, or the category for that event, does not exist"
+          }
+        }
+      }
+    },
+    "/api/participants/{id}/results": {
+      "get": {
+        "tags": [
+          "Results"
+        ],
+        "summary": "View my results",
+        "description": "Shows the participant's personal performance history across events.\n\n**Who can call it:** Participant (own id only).\n\n**Expects:** The participant id in the URL, which must match the logged-in participant.\n\n**Returns:** An array of results, newest event first.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - results returned"
+          },
+          "401": {
+            "description": "Unauthorized - not logged in"
+          },
+          "403": {
+            "description": "Forbidden - not a participant, or not your own id"
+          }
+        }
+      }
+    },
+    "/api/events/{id}/weather": {
+      "get": {
+        "tags": [
+          "Weather"
+        ],
+        "summary": "Get event weather",
+        "description": "Looks up the weather for the event's location and date using the Open-Meteo service.\n\n**Who can call it:** Anyone (public).\n\n**Expects:** The event id in the URL.\n\n**Returns:** A daily forecast (temperature, min and max, wind speed in km/h, conditions) when the event is within the next 16 days. Otherwise the current conditions at the venue plus a note explaining why.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - weather returned"
+          },
+          "404": {
+            "description": "Not Found - the event does not exist, or its location could not be found on the map"
+          },
+          "502": {
+            "description": "Bad Gateway - the weather service is unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CategoryRequestDto": {
+        "required": [
+          "categoryName"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryName": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "distanceKM": {
+            "maximum": 999.99,
+            "minimum": 0.01,
+            "type": "number",
+            "format": "double"
+          },
+          "entryFee": {
+            "maximum": 999999.99,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
+          },
+          "maxParticipants": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordDto": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "newPassword": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EventRequestDto": {
+        "required": [
+          "eventDate",
+          "eventName",
+          "location"
+        ],
+        "type": "object",
+        "properties": {
+          "eventName": {
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "location": {
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "routeDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "startTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginDto": {
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterOrganiserDto": {
+        "required": [
+          "email",
+          "fullName",
+          "organisationName",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "organisationName": {
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string"
+          },
+          "phoneNumber": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterParticipantDto": {
+        "required": [
+          "dateOfBirth",
+          "email",
+          "fullName",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date"
+          },
+          "gender": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactPhone": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResultRequestDto": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "finishTime": {
+            "type": "string",
+            "format": "time",
+            "nullable": true
+          },
+          "position": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateProfileDto": {
+        "required": [
+          "fullName"
+        ],
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "organisationName": {
+            "maxLength": 150,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "gender": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "emergencyContactPhone": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
