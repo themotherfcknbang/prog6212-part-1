@@ -1,0 +1,94 @@
+@{
+    var role = Context.Session.GetRole();
+    var name = Context.Session.GetFullName();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RaceDay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark rd-navbar">
+        <div class="container">
+            <a class="navbar-brand rd-brand" asp-controller="Home" asp-action="Index">RACE<span>DAY</span></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#rdNav"
+                    aria-controls="rdNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="rdNav">
+                <ul class="navbar-nav me-auto">
+                    @if (role == "Organiser")
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Organiser" asp-action="Dashboard">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="OrganiserEvents" asp-action="Index">My Events</a></li>
+                    }
+                    else if (role == "Participant")
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Events</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="MyEnrolments" asp-action="Index">My Enrolments</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="MyResults" asp-action="Index">My Results</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Profile" asp-action="Index">Profile</a></li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Events</a></li>
+                    }
+                </ul>
+                <ul class="navbar-nav align-items-lg-center">
+                    @if (role != null)
+                    {
+                        <li class="nav-item"><span class="navbar-text me-lg-3">Hi, @name <span class="rd-role">@role</span></span></li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="btn btn-sm btn-outline-light">Log out</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Log in</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="btn btn-sm btn-rd dropdown-toggle ms-lg-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Sign up</a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="RegisterParticipant">I want to race</a></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="RegisterOrganiser">I organise events</a></li>
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main class="container rd-main" role="main">
+    @foreach (var (key, css) in new[] { ("Success", "success"), ("Warning", "warning"), ("Error", "danger") })
+    {
+        if (TempData[key] is string message)
+        {
+            <div class="alert alert-@css alert-dismissible fade show" role="alert">
+                @message
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    }
+    @RenderBody()
+</main>
+
+<footer class="rd-footer">
+    <div class="container">&copy; @DateTime.Now.Year RaceDay &middot; Road running, walking and cycling events across South Africa</div>
+</footer>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

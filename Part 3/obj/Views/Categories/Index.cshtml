@@ -1,0 +1,65 @@
+@using System.Globalization
+@model CategoriesPageViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = ev.EventName + ": distances";
+    var za = new CultureInfo("en-ZA");
+}
+
+<partial name="_EventTabs" model='new EventTabsModel(ev.EventID, ev.EventName, "categories")' />
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <p class="text-muted mb-0">The distances people can enter for this event.</p>
+    <a asp-action="Create" asp-route-eventId="@ev.EventID" class="btn btn-rd">+ Add distance</a>
+</div>
+
+@if (ev.Categories.Count == 0)
+{
+    <div class="rd-card p-5 text-center">
+        <h2>No distances yet</h2>
+        <p class="text-muted">Add at least one distance so participants can enter this event.</p>
+        <a asp-action="Create" asp-route-eventId="@ev.EventID" class="btn btn-rd">Add distance</a>
+    </div>
+}
+else
+{
+    <div class="rd-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table rd-table align-middle mb-0">
+                <thead>
+                    <tr><th>Name</th><th>Distance</th><th>Entry fee</th><th>Entries</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in ev.Categories.OrderBy(x => x.DistanceKM))
+                    {
+                        var entries = Model.Entries.TryGetValue(c.CategoryID, out var n) ? n : 0;
+                        <tr>
+                            <td><strong>@c.CategoryName</strong></td>
+                            <td>@c.DistanceKM.ToString("0.##", CultureInfo.InvariantCulture) km</td>
+                            <td>@c.EntryFee.ToString("C", za)</td>
+                            <td>
+                                @entries
+                                @if (c.MaxParticipants.HasValue)
+                                {
+                                    <text> / @c.MaxParticipants</text>
+                                }
+                                else
+                                {
+                                    <span class="rd-meta">(no limit)</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Edit" asp-route-id="@c.CategoryID" class="btn btn-sm btn-outline-rd">Edit</a>
+                                <form asp-action="Delete" asp-route-id="@c.CategoryID" asp-route-eventId="@ev.EventID"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete this distance? This cannot be undone.');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -1,0 +1,148 @@
+@using System.Globalization
+@model ResultsPageViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = ev.EventName + ": results";
+    var statuses = new[] { "Finished", "DNF", "DNS", "DSQ" };
+}
+
+<partial name="_EventTabs" model='new EventTabsModel(ev.EventID, ev.EventName, "results")' />
+
+@if (!Model.EventHasPassed)
+{
+    <div class="alert alert-info">
+        Results can be captured from the day of the event
+        (@ev.EventDate.ToString("d MMMM yyyy", CultureInfo.InvariantCulture)) onwards.
+    </div>
+}
+
+@if (ev.Categories.Count == 0)
+{
+    <div class="rd-card p-5 text-center">
+        <h2>No distances yet</h2>
+        <p class="text-muted">Add a distance and wait for entries before capturing results.</p>
+        <a asp-controller="Categories" asp-action="Create" asp-route-eventId="@ev.EventID" class="btn btn-rd">Add distance</a>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="rd-card p-3 mb-3">
+        <input type="hidden" name="eventId" value="@ev.EventID" />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-8">
+                <label for="categoryId" class="form-label">Distance</label>
+                <select id="categoryId" name="categoryId" class="form-select">
+                    <option value="">All distances</option>
+                    @foreach (var c in ev.Categories.OrderBy(x => x.DistanceKM))
+                    {
+                        <option value="@c.CategoryID" selected="@(Model.SelectedCategoryId == c.CategoryID)">@c.CategoryName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button type="submit" class="btn btn-rd">Apply</button>
+            </div>
+        </div>
+    </form>
+
+    @foreach (var g in Model.Groups)
+    {
+        <div class="rd-card p-0 overflow-hidden mb-4">
+            <div class="p-3 d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0">
+                    @g.Category.CategoryName
+                    <span class="rd-meta">(@g.Category.DistanceKM.ToString("0.##", CultureInfo.InvariantCulture) km)</span>
+                </h2>
+                <span class="rd-meta">@(g.Rows.Count(r => r.ResultID.HasValue)) of @g.Rows.Count captured</span>
+            </div>
+
+            @if (g.Error != null)
+            {
+                <div class="alert alert-danger m-3">@g.Error</div>
+            }
+            else if (g.Rows.Count == 0)
+            {
+                <p class="text-muted px-3 pb-3 mb-0">Nobody has entered this distance, so there is nothing to capture.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table rd-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Bib</th><th>Participant</th><th>Status</th>
+                                <th>Finish time</th><th>Position</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in g.Rows)
+                            {
+                                var formId = $"result-{row.EnrolmentID}";
+                                <tr id="row-@row.EnrolmentID">
+                                    <td>@(row.BibNumber ?? "-")</td>
+                                    <td>
+                                        @row.ParticipantName
+                                        @if (!row.ResultID.HasValue)
+                                        {
+                                            <div class="rd-meta">Not captured yet</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <select name="status" form="@formId" class="form-select form-select-sm rd-result-status"
+                                                disabled="@(!Model.EventHasPassed)">
+                                            @foreach (var s in statuses)
+                                            {
+                                                <option value="@s" selected="@(row.Status == s)">@Formatting.StatusLabel(s)</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="finishTime" form="@formId" value="@row.FinishTime"
+                                               class="form-control form-control-sm rd-result-time" placeholder="hh:mm:ss"
+                                               inputmode="numeric" autocomplete="off" style="min-width: 110px"
+                                               disabled="@(!Model.EventHasPassed)" />
+                                    </td>
+                                    <td>
+                                        <input type="number" name="position" form="@formId" value="@row.Position" min="1"
+                                               class="form-control form-control-sm rd-result-position" style="min-width: 80px"
+                                               disabled="@(!Model.EventHasPassed)" />
+                                    </td>
+                                    <td class="text-end">
+                                        <form id="@formId" asp-action="Save" method="post" class="d-inline">
+                                            <input type="hidden" name="eventId" value="@ev.EventID" />
+                                            <input type="hidden" name="categoryId" value="@g.Category.CategoryID" />
+                                            <input type="hidden" name="enrolmentId" value="@row.EnrolmentID" />
+                                            <input type="hidden" name="resultId" value="@row.ResultID" />
+                                            <button type="submit" class="btn btn-sm btn-rd" disabled="@(!Model.EventHasPassed)">
+                                                @(row.ResultID.HasValue ? "Update" : "Save")
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        // A time and position only make sense for finishers: grey them out for DNF, DNS and DSQ
+        document.querySelectorAll('.rd-result-status').forEach(function (select) {
+            var row = select.closest('tr');
+            var time = row.querySelector('.rd-result-time');
+            var position = row.querySelector('.rd-result-position');
+            var locked = select.disabled;
+
+            function sync() {
+                var finished = select.value === 'Finished';
+                if (!locked) { time.disabled = !finished; position.disabled = !finished; }
+            }
+            select.addEventListener('change', sync);
+            sync();
+        });
+    </script>
+}

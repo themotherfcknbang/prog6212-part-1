@@ -1,0 +1,11 @@
+@{ ViewData["Title"] = "Access denied"; }
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="rd-card p-4 text-center">
+            <h1 class="rd-title">That page isn't for you</h1>
+            <p class="text-muted">Your account type doesn't have access to this area of RaceDay.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-rd">Back to events</a>
+        </div>
+    </div>
+</div>

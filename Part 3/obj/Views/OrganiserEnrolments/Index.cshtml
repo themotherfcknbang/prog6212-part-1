@@ -1,0 +1,88 @@
+@using System.Globalization
+@model EnrolmentsPageViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = ev.EventName + ": enrolments";
+}
+
+<partial name="_EventTabs" model='new EventTabsModel(ev.EventID, ev.EventName, "enrolments")' />
+
+@if (ev.Categories.Count == 0)
+{
+    <div class="rd-card p-5 text-center">
+        <h2>No distances yet</h2>
+        <p class="text-muted">Add a distance first, then people can enter.</p>
+        <a asp-controller="Categories" asp-action="Create" asp-route-eventId="@ev.EventID" class="btn btn-rd">Add distance</a>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="rd-card p-3 mb-3">
+        <input type="hidden" name="eventId" value="@ev.EventID" />
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label for="categoryId" class="form-label">Distance</label>
+                <select id="categoryId" name="categoryId" class="form-select">
+                    <option value="">All distances</option>
+                    @foreach (var c in ev.Categories.OrderBy(x => x.DistanceKM))
+                    {
+                        <option value="@c.CategoryID" selected="@(Model.SelectedCategoryId == c.CategoryID)">@c.CategoryName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="includeCancelled" name="includeCancelled" value="true"
+                           checked="@Model.IncludeCancelled" />
+                    <label class="form-check-label" for="includeCancelled">Include cancelled</label>
+                </div>
+            </div>
+            <div class="col-md-3 text-md-end">
+                <button type="submit" class="btn btn-rd">Apply</button>
+            </div>
+        </div>
+    </form>
+
+    @foreach (var g in Model.Groups)
+    {
+        <div class="rd-card p-0 overflow-hidden mb-4">
+            <div class="p-3 d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0">
+                    @g.Category.CategoryName
+                    <span class="rd-meta">(@g.Category.DistanceKM.ToString("0.##", CultureInfo.InvariantCulture) km)</span>
+                </h2>
+                <span class="rd-meta">@g.Entries.Count @(g.Entries.Count == 1 ? "entry" : "entries")</span>
+            </div>
+
+            @if (g.Error != null)
+            {
+                <div class="alert alert-danger m-3">@g.Error</div>
+            }
+            else if (g.Entries.Count == 0)
+            {
+                <p class="text-muted px-3 pb-3 mb-0">Nobody has entered this distance yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table rd-table align-middle mb-0">
+                        <thead>
+                            <tr><th>Bib</th><th>Participant</th><th>Enrolled</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in g.Entries)
+                            {
+                                <tr>
+                                    <td>@(e.BibNumber ?? "-")</td>
+                                    <td>@e.ParticipantName</td>
+                                    <td>@e.EnrolmentDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                    <td><span class="status-badge status-@e.Status.ToLower()">@e.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+}

@@ -1,0 +1,149 @@
+@using System.Globalization
+@model EventDetailsViewModel
+@{
+    var ev = Model.Event;
+    ViewData["Title"] = ev.EventName;
+    var role = Context.Session.GetRole();
+    var za = new CultureInfo("en-ZA");
+    var hasPassed = ev.EventDate < DateOnly.FromDateTime(DateTime.Today);
+}
+
+<p><a asp-controller="Home" asp-action="Index">&larr; All events</a></p>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        @if (!string.IsNullOrEmpty(ev.BannerUrl))
+        {
+            <img src="@ev.BannerUrl" alt="Banner for @ev.EventName" class="rd-detail-banner mb-3" />
+        }
+        else
+        {
+            <div class="rd-detail-banner-empty mb-3"></div>
+        }
+
+        <h1 class="rd-title mb-1">@ev.EventName</h1>
+        <p class="rd-meta">
+            @ev.EventDate.ToString("dddd, d MMMM yyyy", CultureInfo.InvariantCulture)
+            @if (ev.StartTime.HasValue)
+            {
+                <text> &middot; Starts @ev.StartTime.Value.ToString("HH:mm")</text>
+            }
+            <br />@ev.Location &middot; Hosted by @ev.OrganisationName
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(ev.Description))
+        {
+            <h2 class="h4">About this event</h2>
+            <p style="white-space: pre-line">@ev.Description</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(ev.RouteDescription))
+        {
+            <h2 class="h4">The route</h2>
+            <p style="white-space: pre-line">@ev.RouteDescription</p>
+        }
+
+        @if (Model.Weather != null)
+        {
+            var w = Model.Weather;
+            var isForecast = w.ForecastType == "forecast";
+            <h2 class="h4">Weather</h2>
+            <div class="rd-card p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <div class="rd-stat">@w.Temperature.ToString("0.#", CultureInfo.InvariantCulture)&deg;C</div>
+                        <div>@w.Conditions</div>
+                    </div>
+                    <div class="text-end rd-meta">
+                        <span class="status-badge @(isForecast ? "status-confirmed" : "status-pending")">@(isForecast ? "Forecast" : "Current conditions")</span>
+                        <br />@w.ForecastDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)
+                        @if (w.TemperatureMin.HasValue && w.TemperatureMax.HasValue)
+                        {
+                            <br /><text>Low @w.TemperatureMin.Value.ToString("0.#", CultureInfo.InvariantCulture)&deg;C
+                            &middot; High @w.TemperatureMax.Value.ToString("0.#", CultureInfo.InvariantCulture)&deg;C</text>
+                        }
+                        <br />Wind up to @w.WindSpeed.ToString("0.#", CultureInfo.InvariantCulture) km/h
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(w.Note))
+                {
+                    <p class="rd-meta mb-0 mt-2">@w.Note</p>
+                }
+            </div>
+        }
+        else if (Model.WeatherError != null)
+        {
+            <p class="rd-meta">@Model.WeatherError</p>
+        }
+    </div>
+
+    <div class="col-lg-5">
+        <div class="rd-card p-3">
+            <h2 class="h4">Distances</h2>
+
+            @if (ev.Categories.Count == 0)
+            {
+                <p class="text-muted mb-0">The organiser hasn't added any distances yet.</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var c in ev.Categories)
+                    {
+                        <li class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <div>
+                                    <strong>@c.CategoryName</strong>
+                                    <div class="rd-meta">
+                                        @c.DistanceKM.ToString("0.##") km &middot; @c.EntryFee.ToString("C", za)
+                                        @if (c.MaxParticipants.HasValue)
+                                        {
+                                            <text> &middot; Limited to @c.MaxParticipants</text>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    @if (role == "Participant")
+                                    {
+                                        if (Model.MyEnrolments.TryGetValue(c.CategoryID, out var mine))
+                                        {
+                                            <span class="status-badge status-@mine.Status.ToLower()">@mine.Status</span>
+                                            <div class="rd-meta">Bib @mine.BibNumber</div>
+                                        }
+                                        else if (hasPassed)
+                                        {
+                                            <span class="rd-meta">Event over</span>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="Enrol" method="post">
+                                                <input type="hidden" name="eventId" value="@ev.EventID" />
+                                                <input type="hidden" name="categoryId" value="@c.CategoryID" />
+                                                <button type="submit" class="btn btn-rd btn-sm">Enrol</button>
+                                            </form>
+                                        }
+                                    }
+                                    else if (role == null)
+                                    {
+                                        <a asp-controller="Account" asp-action="Login"
+                                           asp-route-returnUrl="@Context.Request.Path" class="btn btn-outline-rd btn-sm">Log in to enrol</a>
+                                    }
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+                @if (role == "Organiser")
+                {
+                    <p class="rd-meta mt-3 mb-0">You're logged in as an organiser. Only participants can enrol.</p>
+                }
+            }
+        </div>
+
+        @if (role == "Participant" && Model.MyEnrolments.Count > 0)
+        {
+            <a asp-controller="MyEnrolments" asp-action="Index" class="btn btn-outline-rd w-100 mt-3">View all my enrolments</a>
+        }
+    </div>
+</div>

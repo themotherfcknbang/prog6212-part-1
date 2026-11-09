@@ -1,0 +1,108 @@
+/* RaceDay theme: sporting and energetic. Colours and fonts are defined once, here. */
+:root {
+    --rd-navy: #0b1d33;
+    --rd-navy-soft: #16304f;
+    --rd-orange: #ff5a1f;
+    --rd-orange-dark: #e04a12;
+    --rd-lime: #c8f31d;
+    --rd-bg: #f3f5f8;
+    --rd-text: #1b2735;
+    --rd-muted: #5f6f82;
+    --rd-radius: 14px;
+    --bs-body-font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --bs-body-color: var(--rd-text);
+    --bs-link-color: var(--rd-orange-dark);
+    --bs-link-hover-color: var(--rd-orange);
+}
+
+html { position: relative; min-height: 100%; font-size: 15px; }
+body { background: var(--rd-bg); margin-bottom: 70px; }
+
+h1, h2, h3, h4, .rd-title, .rd-brand {
+    font-family: 'Barlow Condensed', 'Arial Narrow', 'Segoe UI', sans-serif;
+    letter-spacing: .02em;
+}
+.rd-title { font-weight: 700; font-size: 2.1rem; text-transform: uppercase; color: var(--rd-navy); }
+.rd-main { padding-top: 2rem; padding-bottom: 2rem; }
+
+/* Navbar */
+.rd-navbar { background: var(--rd-navy); border-bottom: 4px solid var(--rd-orange); }
+.rd-brand { font-size: 1.8rem; font-weight: 700; font-style: italic; color: #fff !important; }
+.rd-brand span { color: var(--rd-orange); }
+.rd-role { background: var(--rd-lime); color: var(--rd-navy); font-size: .7rem; font-weight: 700;
+           text-transform: uppercase; padding: .15rem .5rem; border-radius: 999px; margin-left: .35rem; }
+.rd-navbar .nav-link { font-weight: 500; }
+.rd-navbar .nav-link:hover { color: var(--rd-lime); }
+
+/* Buttons */
+.btn-rd { background: var(--rd-orange); border-color: var(--rd-orange); color: #fff; font-weight: 600;
+          text-transform: uppercase; letter-spacing: .04em; }
+.btn-rd:hover, .btn-rd:focus { background: var(--rd-orange-dark); border-color: var(--rd-orange-dark); color: #fff; }
+.btn-outline-rd { border-color: var(--rd-navy); color: var(--rd-navy); font-weight: 600; }
+.btn-outline-rd:hover { background: var(--rd-navy); color: #fff; }
+
+/* Cards */
+.rd-card { background: #fff; border: 0; border-radius: var(--rd-radius);
+           box-shadow: 0 4px 18px rgba(11, 29, 51, .08); }
+.rd-card.rd-event:hover { transform: translateY(-3px); transition: transform .15s; }
+.rd-banner { height: 170px; object-fit: cover; width: 100%; border-radius: var(--rd-radius) var(--rd-radius) 0 0; }
+.rd-banner-empty { height: 170px; border-radius: var(--rd-radius) var(--rd-radius) 0 0;
+                   background: linear-gradient(135deg, var(--rd-navy), var(--rd-navy-soft)); }
+.rd-hero { background: linear-gradient(120deg, var(--rd-navy) 0%, var(--rd-navy-soft) 100%);
+           color: #fff; border-radius: var(--rd-radius); padding: 2.5rem; border-left: 8px solid var(--rd-orange); }
+.rd-hero h1 { font-size: 3rem; font-weight: 700; text-transform: uppercase; font-style: italic; }
+.rd-stat { font-family: 'Barlow Condensed', sans-serif; font-size: 2.6rem; font-weight: 700; color: var(--rd-orange); line-height: 1; }
+
+/* Enrolment status colours */
+.status-badge { padding: .3rem .7rem; border-radius: 999px; font-size: .78rem; font-weight: 700; text-transform: uppercase; }
+.status-confirmed { background: #d6f5dd; color: #11672b; }
+.status-pending   { background: #ffe9b8; color: #8a5a00; }
+.status-cancelled { background: #fbd9d9; color: #9b1c1c; }
+
+/* Forms */
+.form-control:focus, .form-select:focus { border-color: var(--rd-orange); box-shadow: 0 0 0 .2rem rgba(255, 90, 31, .2); }
+.form-label { font-weight: 600; font-size: .9rem; }
+
+/* Tables */
+.rd-table thead th { background: var(--rd-navy); color: #fff; font-weight: 600; border: 0; }
+
+/* Footer */
+.rd-footer { position: absolute; bottom: 0; width: 100%; line-height: 60px; background: var(--rd-navy);
+             color: #aebbcb; font-size: .85rem; }
+
+/* Event cards */
+.rd-banner-wrap { position: relative; }
+.rd-datebadge { position: absolute; top: 12px; left: 12px; background: var(--rd-lime); color: var(--rd-navy);
+                border-radius: 10px; padding: .35rem .7rem; text-align: center; line-height: 1;
+                font-family: 'Barlow Condensed', sans-serif; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.rd-datebadge .rd-day { font-size: 1.7rem; }
+.rd-datebadge .rd-mon { font-size: .85rem; letter-spacing: .08em; }
+.rd-meta { color: var(--rd-muted); font-size: .9rem; }
+.rd-detail-banner { width: 100%; max-height: 360px; object-fit: cover; border-radius: var(--rd-radius); }
+.rd-detail-banner-empty { height: 200px; border-radius: var(--rd-radius);
+                          background: linear-gradient(135deg, var(--rd-navy), var(--rd-navy-soft)); }
+
+/* Result statuses */
+.status-finished { background: #d6f5dd; color: #11672b; }
+.status-dnf { background: #ffe9b8; color: #8a5a00; }
+.status-dns { background: #e4e8ee; color: #4a5868; }
+.status-dsq { background: #fbd9d9; color: #9b1c1c; }
+.rd-position { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rd-navy); }
+.rd-time { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 600; }
+
+/* Profile picture */
+.rd-avatar { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 5px solid var(--rd-orange); }
+.rd-avatar-empty { width: 140px; height: 140px; border-radius: 50%; border: 5px solid var(--rd-orange);
+                   background: var(--rd-navy); color: #fff; display: flex; align-items: center; justify-content: center;
+                   font-family: 'Barlow Condensed', sans-serif; font-size: 3.5rem; font-weight: 700; margin: 0 auto; }
+
+/* Organiser area */
+.rd-stat-card { background: #fff; border-radius: var(--rd-radius); padding: 1.25rem 1.5rem;
+                box-shadow: 0 4px 18px rgba(11, 29, 51, .08); border-top: 5px solid var(--rd-orange); height: 100%; }
+.rd-stat-label { color: var(--rd-muted); font-weight: 600; text-transform: uppercase; font-size: .78rem; letter-spacing: .06em; }
+.rd-thumb { width: 72px; height: 44px; object-fit: cover; border-radius: 8px; background: var(--rd-navy); display: block; }
+.rd-thumb-empty { width: 72px; height: 44px; border-radius: 8px; background: linear-gradient(135deg, var(--rd-navy), var(--rd-navy-soft)); }
+.rd-tabs .nav-link { color: var(--rd-navy); font-weight: 600; }
+.rd-tabs .nav-link.active { background: var(--rd-orange); color: #fff; }
+.rd-tabs .nav-link:hover { color: var(--rd-orange-dark); }
+.rd-tabs .nav-link.active:hover { color: #fff; }

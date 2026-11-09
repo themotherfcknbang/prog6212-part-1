@@ -1,0 +1,29 @@
+@{
+    var code = ViewData["Code"] as int? ?? 500;
+    ViewData["Title"] = "Oops";
+    var heading = code switch
+    {
+        404 => "We couldn't find that page",
+        403 => "You don't have access to that",
+        401 => "Please log in first",
+        _ => "Something went wrong"
+    };
+    var text = code switch
+    {
+        404 => "The page may have moved, or the link might be wrong.",
+        403 => "Your account type can't open this page.",
+        401 => "You need to be logged in to see this page.",
+        _ => "Please try again in a moment."
+    };
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="rd-card p-4 text-center">
+            <div class="rd-stat">@code</div>
+            <h1 class="rd-title">@heading</h1>
+            <p class="text-muted">@text</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-rd">Back to events</a>
+        </div>
+    </div>
+</div>

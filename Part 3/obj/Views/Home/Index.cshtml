@@ -1,0 +1,90 @@
+@model HomeViewModel
+@{ ViewData["Title"] = "Upcoming events"; }
+
+<section class="rd-hero mb-4">
+    <h1>Find your next race</h1>
+    <p class="lead mb-0">Road running, walking and cycling events across South Africa. Pick a distance, enter in minutes.</p>
+</section>
+
+<form method="get" asp-action="Index" class="rd-card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label" for="keyword">Search</label>
+            <input id="keyword" name="keyword" value="@Model.Keyword" class="form-control" placeholder="Event name or keyword" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="location">Location</label>
+            <input id="location" name="location" value="@Model.Location" class="form-control" placeholder="City or venue" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="from">From</label>
+            <input id="from" name="from" type="date" value="@(Model.From?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="to">To</label>
+            <input id="to" name="to" type="date" value="@(Model.To?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-rd flex-grow-1">Filter</button>
+            @if (Model.HasFilters)
+            {
+                <a asp-action="Index" class="btn btn-outline-rd">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else if (Model.Events.Count == 0)
+{
+    <div class="rd-card p-5 text-center">
+        <h2>No events found</h2>
+        <p class="text-muted mb-0">
+            @(Model.HasFilters ? "Try changing or clearing your filters." : "There are no upcoming events yet. Check back soon.")
+        </p>
+    </div>
+}
+else
+{
+    <p class="rd-meta">@Model.Events.Count upcoming event@(Model.Events.Count == 1 ? "" : "s")</p>
+    <div class="row g-4">
+        @foreach (var e in Model.Events)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="rd-card rd-event h-100 d-flex flex-column">
+                    <div class="rd-banner-wrap">
+                        @if (!string.IsNullOrEmpty(e.BannerUrl))
+                        {
+                            <img src="@e.BannerUrl" alt="Banner for @e.EventName" class="rd-banner" />
+                        }
+                        else
+                        {
+                            <div class="rd-banner-empty"></div>
+                        }
+                        <div class="rd-datebadge">
+                            <div class="rd-day">@e.EventDate.Day</div>
+                            <div class="rd-mon">@e.EventDate.ToString("MMM").ToUpper()</div>
+                        </div>
+                    </div>
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <h2 class="h4 mb-1">@e.EventName</h2>
+                        <div class="rd-meta">@e.Location</div>
+                        <div class="rd-meta mb-3">
+                            Hosted by @e.OrganisationName
+                            @if (e.StartTime.HasValue)
+                            {
+                                <text> &middot; Starts @e.StartTime.Value.ToString("HH:mm")</text>
+                            }
+                            <br />@e.CategoryCount distance@(e.CategoryCount == 1 ? "" : "s") available
+                        </div>
+                        <a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventID"
+                           class="btn btn-rd mt-auto">View event</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

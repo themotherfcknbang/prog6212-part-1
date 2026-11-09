@@ -1,0 +1,46 @@
+@model CategoryFormViewModel
+@{
+    var isEdit = Model.CategoryID.HasValue;
+    ViewData["Title"] = isEdit ? "Edit distance" : "Add distance";
+}
+
+<p><a asp-action="Index" asp-route-eventId="@Model.EventID">&larr; Back to @(Model.EventName ?? "event")</a></p>
+<h1 class="rd-title">@ViewData["Title"]</h1>
+
+<div class="rd-card p-4">
+    <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <input type="hidden" asp-for="CategoryID" />
+        <input type="hidden" asp-for="EventID" />
+        <input type="hidden" asp-for="EventName" />
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="CategoryName" class="form-label"></label>
+                <input asp-for="CategoryName" class="form-control" placeholder="e.g. 10 km" />
+                <span asp-validation-for="CategoryName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="DistanceKM" class="form-label"></label>
+                <input asp-for="DistanceKM" type="number" step="0.01" min="0.01" max="999.99" class="form-control" />
+                <span asp-validation-for="DistanceKM" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="EntryFee" class="form-label"></label>
+                <input asp-for="EntryFee" type="number" step="0.01" min="0" class="form-control" />
+                <span asp-validation-for="EntryFee" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="MaxParticipants" class="form-label"></label>
+                <input asp-for="MaxParticipants" type="number" min="1" class="form-control" />
+                <div class="form-text">Leave empty for no limit.</div>
+                <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-rd mt-4">@(isEdit ? "Save changes" : "Add distance")</button>
+        <a asp-action="Index" asp-route-eventId="@Model.EventID" class="btn btn-link mt-4">Cancel</a>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

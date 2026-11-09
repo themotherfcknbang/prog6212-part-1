@@ -1,0 +1,104 @@
+@using System.Globalization
+@model DashboardViewModel
+@{ ViewData["Title"] = "Dashboard"; }
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="rd-title mb-0">Dashboard</h1>
+        <p class="text-muted mb-0">Welcome back, @Model.OrganiserName.</p>
+    </div>
+    <a asp-controller="OrganiserEvents" asp-action="Create" class="btn btn-rd">+ Create event</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="rd-stat-card">
+                <div class="rd-stat-label">Total events</div>
+                <div class="rd-stat">@Model.TotalEvents</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rd-stat-card">
+                <div class="rd-stat-label">Upcoming events</div>
+                <div class="rd-stat">@Model.UpcomingEvents</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rd-stat-card">
+                <div class="rd-stat-label">Total enrolments</div>
+                <div class="rd-stat">@Model.TotalEnrolments</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="h4">Upcoming events</h2>
+    @if (Model.Upcoming.Count == 0)
+    {
+        <div class="rd-card p-4 text-center mb-4">
+            <p class="text-muted mb-2">You have no upcoming events.</p>
+            <a asp-controller="OrganiserEvents" asp-action="Create" class="btn btn-rd btn-sm">Create your first event</a>
+        </div>
+    }
+    else
+    {
+        <div class="rd-card p-0 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table rd-table align-middle mb-0">
+                    <thead>
+                        <tr><th>Event</th><th>Date</th><th>Location</th><th>Distances</th><th>Enrolments</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Upcoming)
+                        {
+                            <tr>
+                                <td><strong>@row.Event.EventName</strong></td>
+                                <td>@row.Event.EventDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                <td>@row.Event.Location</td>
+                                <td>@row.Event.CategoryCount</td>
+                                <td><strong>@row.Enrolments</strong></td>
+                                <td class="text-end text-nowrap">
+                                    <a asp-controller="Categories" asp-action="Index" asp-route-eventId="@row.Event.EventID" class="btn btn-sm btn-outline-rd">Distances</a>
+                                    <a asp-controller="OrganiserEnrolments" asp-action="Index" asp-route-eventId="@row.Event.EventID" class="btn btn-sm btn-outline-rd">Enrolments</a>
+                                    <a asp-controller="OrganiserEvents" asp-action="Edit" asp-route-id="@row.Event.EventID" class="btn btn-sm btn-outline-rd">Edit</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (Model.Past.Count > 0)
+    {
+        <h2 class="h4">Recent events: capture results</h2>
+        <div class="rd-card p-0 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table rd-table align-middle mb-0">
+                    <thead>
+                        <tr><th>Event</th><th>Date</th><th>Enrolments</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Past)
+                        {
+                            <tr>
+                                <td><strong>@row.Event.EventName</strong></td>
+                                <td>@row.Event.EventDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                <td>@row.Enrolments</td>
+                                <td class="text-end">
+                                    <a asp-controller="OrganiserResults" asp-action="Index" asp-route-eventId="@row.Event.EventID" class="btn btn-sm btn-rd">Capture results</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

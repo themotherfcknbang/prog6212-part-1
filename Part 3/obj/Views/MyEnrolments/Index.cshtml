@@ -1,0 +1,68 @@
+@using System.Globalization
+@model List<EnrolmentInfo>
+@{
+    ViewData["Title"] = "My enrolments";
+    var za = new CultureInfo("en-ZA");
+    var today = DateOnly.FromDateTime(DateTime.Today);
+}
+
+<h1 class="rd-title">My enrolments</h1>
+<p class="text-muted">Every event you've entered, and where each entry stands.</p>
+
+@if (ViewData["Error"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (Model.Count == 0)
+{
+    <div class="rd-card p-5 text-center">
+        <h2>You haven't entered any events yet</h2>
+        <p class="text-muted">Find a race that suits you and enrol in a few clicks.</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-rd">Browse events</a>
+    </div>
+}
+else
+{
+    <div class="rd-card p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table rd-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Date</th>
+                        <th>Distance</th>
+                        <th>Entry fee</th>
+                        <th>Bib</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var en in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="Events" asp-action="Details" asp-route-id="@en.EventID"><strong>@en.EventName</strong></a>
+                                <div class="rd-meta">@en.Location</div>
+                            </td>
+                            <td>@en.EventDate.ToString("d MMM yyyy", CultureInfo.InvariantCulture)</td>
+                            <td>@en.CategoryName (@en.DistanceKM.ToString("0.##") km)</td>
+                            <td>@en.EntryFee.ToString("C", za)</td>
+                            <td>@(en.BibNumber ?? "-")</td>
+                            <td><span class="status-badge status-@en.Status.ToLower()">@en.Status</span></td>
+                            <td class="text-end">
+                                @if (en.Status != "Cancelled" && en.EventDate >= today)
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@en.EnrolmentID" method="post"
+                                          onsubmit="return confirm('Cancel your entry for @en.EventName?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
